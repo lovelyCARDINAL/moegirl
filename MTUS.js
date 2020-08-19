@@ -9,7 +9,7 @@ $(function() {
             title: "移动到创建者的用户子页并挂删[alt-shift-m]",
             accesskey: 'm'
         },
-        text: '打回家'
+        text: '打入冷宫'
     }).on('click', function() {
         var api = new mw.Api();
         api.get({
