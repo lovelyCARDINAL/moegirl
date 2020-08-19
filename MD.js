@@ -1,6 +1,6 @@
 $(function() {
     var self = $('#p-cactions .menu ul');
-    if (!self.find('li')[0] || $('.willBeDeleted')[0] || mw.config.get('wgUserGroups').indexOf('patroller') === -1 || mw.config.get('wgNamespaceNumber') != 0 || mw.config.get('wgNamespaceNumber') != 10) return;
+    if (!self.find('li')[0] || $('.willBeDeleted')[0] || mw.config.get('wgUserGroups').indexOf('patroller') === -1 || (mw.config.get('wgNamespaceNumber') != 0 && mw.config.get('wgNamespaceNumber') != 10)) return;
     $('<a/>', {
         attr: {
             href: "#",
