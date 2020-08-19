@@ -10,7 +10,7 @@ $(function() {
         },
         text: '不再使用'
     }).on('click', function() {
-        var reason = prompt('挂删的理由【将会替换全文内容】\n【空白则使用默认理由】\n【取消则不进行挂删】：'),
+        var reason = prompt('空白则使用默认理由\n『讨论版申请或不再使用』\n取消则不进行挂删'),
             self = $(this);
         if (reason === null) return;
         if (reason === '') reason = '讨论版申请或不再使用';
@@ -46,7 +46,7 @@ $(function() {
             format: 'json',
             title: mw.config.get('wgPageName'),
             text: '<noinclude>{{即将删除' + reasonText + '|user=' + mw.config.get("wgUserName") + '}}</noinclude>',
-            summary: '挂删：' + reason,
+            summary: '即将删除：' + reason,
             nocreate: true,
             watchlist: 'preferences'
         }).then(function(d) {
