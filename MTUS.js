@@ -1,8 +1,6 @@
-// 巡查用小工具，对于主空间条目，在右上角【更多】中添加【打回用户页】，当条目贡献者不只一人时有额外提示。
-
 $(function() {
     var self = $('#p-cactions .menu ul');
-    if (!self.find('li')[0] || $('.willBeDeleted')[0] || mw.config.get('wgUserGroups').indexOf('patroller') === -1 || mw.config.get('wgNamespaceNumber') != 0) return;
+    if (!self.find('li')[0] || $('.willBeDeleted')[0] || mw.config.get('wgUserGroups').indexOf('patroller') === -1 || mw.config.get('wgNamespaceNumber') != 0 || mw.config.get('wgNamespaceNumber') != 10) return;
     $('<a/>', {
         attr: {
             href: "#",
