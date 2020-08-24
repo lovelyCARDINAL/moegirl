@@ -62,7 +62,7 @@ $(function() {
                 rvlimit: 1,
                 rvdir: 'newer'
             });
-        }, loadingBox.endOut.bind(loadingBox)).then(function(d) {
+        }, function() {alert('打回失败！');}).then(function(d) {
             if (d.error) return loadingBox.endOut();
             return api.postWithToken('csrf', {
                 action: 'move',
@@ -89,7 +89,7 @@ $(function() {
             window.setTimeout(function() {
                 window.location.reload();
             }, 730);
-        }, function() {alert('打回失败！');});
+        }, loadingBox.endOut.bind(loadingBox));
     }).appendTo($('<li/>', {
         attr: {
             id: 'ca-moveToUserSubpage'
