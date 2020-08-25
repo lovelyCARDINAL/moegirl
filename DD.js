@@ -1,6 +1,6 @@
 "use strict";
 $(() => (async () => {
-    if (mw.config.get("wgNamespaceNumber") !== 14 || !mw.config.get("wgUserGroups").includes("patroller")) { return; }
+    if (mw.config.get("wgNamespaceNumber") !== 14 || !mw.config.get("wgUserGroups").includes("sysop") && !mw.config.get("wgUserGroups").includes("patroller")) { return; }
     let globalDeletionLock = false;
     const categories = {
         "zh.moegirl.org.cn": "Category:即将删除的页面",
