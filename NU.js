@@ -10,10 +10,10 @@ $(function() {
         },
         text: '不再使用'
     }).on('click', function() {
-        var reason = prompt('空白则使用默认理由\n『讨论版申请或不再使用』\n取消则不进行挂删'),
+        var reason = prompt('空白则使用默认理由\n『不再使用』\n取消则不进行挂删'),
             self = $(this);
         if (reason === null) return;
-        if (reason === '') reason = '讨论版申请或不再使用';
+        if (reason === '') reason = '不再使用';
         var loadingBox = $('<div/>', {
                 css: {
                     position: 'fixed',
@@ -46,7 +46,7 @@ $(function() {
             format: 'json',
             title: mw.config.get('wgPageName'),
             text: '<noinclude>{{即将删除' + reasonText + '|user=' + mw.config.get("wgUserName") + '}}</noinclude>',
-            summary: '即将删除：' + reason,
+            summary: '挂删：' + reason,
             nocreate: true,
             watchlist: 'preferences'
         }).then(function(d) {
