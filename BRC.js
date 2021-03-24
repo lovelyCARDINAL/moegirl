@@ -1,0 +1,194 @@
+// <pre>
+// ==UserScript==
+// @name         检查重定向分类
+// @namespace    top.xzonn.moegirl
+// @version      1.0.2
+// @description  自动检查并修复重定向分类，支持检查{{萌点}}和{{Cate}}模板
+// @icon         https://zh.moegirl.org.cn/favicon.ico
+// @author       Xzonn
+// @homepage     https://xzonn.top/
+// @match        https://zh.moegirl.org.cn/*
+// @match        https://commons.moegirl.org.cn/*
+// @grant        none
+// @updateURL    https://zh.moegirl.org.cn/User:Xzonn/FixRedirectCategory.js?action=raw&ctype=text/javascript
+// ==/UserScript==
+
+/* global mw, jQuery */
+
+setTimeout(function temp() {
+    'use strict';
+    let xzFixRedirectCategoryInterval = +localStorage.getItem("xzFixRedirectCategoryInterval");
+    if (xzFixRedirectCategoryInterval == 0 || isNaN(xzFixRedirectCategoryInterval)) {
+    	localStorage.setItem("xzFixRedirectCategoryInterval", (xzFixRedirectCategoryInterval = 43200000));
+    }
+    if (new Date() - +localStorage.getItem("xzFixRedirectCategoryTime") < xzFixRedirectCategoryInterval) {
+        return;
+    }
+    if (!window.mw || !mw.Api) {
+        setTimeout(temp, 100);
+        return;
+    }
+    let missions = 0, interval;
+    let api = new mw.Api();
+    let esc = function (s) {
+        return s.replace(/([\?\.\\\^\$\*\+\(\)])/g, "\\$1");
+    }
+    let printLog = function (text, className, id) {
+        if (id) {
+            if (jQuery("#" + id).length == 0) {
+                jQuery("<p/>").attr("id", id).appendTo(jQuery("#siteNotice"));
+            } else {
+                jQuery("#" + id).text(text);
+            }
+        } else {
+            jQuery("<p/>").text(text).addClass(className).css({
+                "font-size": "18px"
+            }).appendTo(jQuery("#siteNotice"));
+        }
+    }
+    let editPageContent = function (data, zhHans, zhHant) {
+        let from = data["query"]["redirects"][0]["from"].replace(/^Category:/, ""), to = data["query"]["redirects"][0]["to"].replace(/^Category:/, "");
+        data["query"]["categorymembers"].forEach(function (page) {
+            missions++;
+            return api.get({
+                "action": "query",
+                "format": "json",
+                "pageids": page["pageid"],
+                "prop": "revisions",
+                "rvprop": "content",
+                "rvlimit": 1,
+                "meta": "tokens",
+                "type": "csrf"
+            }).done(function (data) {
+                let moe, lastIndex = 0;
+                let text = data["query"]["pages"][page["pageid"]]["revisions"][0]["*"];
+                let chineseCate = [from, zhHans, zhHant].map(esc).join("|");
+                let reg = new RegExp("\\[\\[\\s*(?:Category|cat|分类|分類):(?:" + chineseCate + ")\\s*(\\|[^\\[\\]]*)?\\s*\\]\\]", "ig");
+                text = text.replace(reg, "[[Category:" + to + "$1]]");
+                while (moe = text.substring(lastIndex, text.length).match(/\{\{\s*(萌点|萌點|[Cc]ate)\s*\|/)) {
+                    let left = 2, i, groups = [""];
+                    for (i = lastIndex + moe.index + moe[0].length; i < text.length; i++) {
+                        if (text[i] == "{") {
+                            left++;
+                        } else if (text[i] == "}") {
+                            left--;
+                        }
+                        if (left == 2 && text[i] == "|") {
+                            groups.push("");
+                        } else {
+                            groups[groups.length - 1] += text[i];
+                        }
+                        if (left == 0) {
+                            groups[groups.length - 1] = groups[groups.length - 1].substr(0, groups[groups.length - 1].length - 2);
+                            break;
+                        }
+                    }
+                    groups = groups.map(x => x.replace(new RegExp("^(\\s*)(" + chineseCate + ")(\\s*)$"), "$1" + to + (moe[1].toLowerCase() == "cate" ? "" : ",$2") + "$3"));
+                    groups = groups.map(x => x.replace(new RegExp("^(\\s*)(" + chineseCate + ")([，,].*)$"), "$1" + to + "$3"));
+                    groups = groups.map(x => x.replace(/^\s*([^，,\s]+)[，,]\1\s*$/, "$1"));
+                    text = text.substring(0, lastIndex + moe.index + moe[0].length) + groups.join("|") + text.substring(i - 1, text.length);
+                    lastIndex = i;
+                }
+                return api.post({
+                    "action": "edit",
+                    "pageid": page["pageid"],
+                    "text": text,
+                    "minor": 1,
+                    "bot": 1,
+                    "tags": "Bot",
+                    "summary": "分类文本替换 - [[Category:" + from + "]]→[[Category:" + to + "]]",
+                    "token": data["query"]["tokens"]["csrftoken"]
+                }).done(function (data) {
+                    console.log(data);
+                    if (data["edit"]["nochange"] !== undefined) {
+                        printLog(`${data["edit"]["title"]} 修复失败，请手动检查。`, "error");
+                    } else {
+                        printLog(`${data["edit"]["title"]} 修复成功。`, "sucess");
+                    }
+                    missions--;
+                });
+            });
+        });
+    }
+    let clearCategories = function ([title, pageid]) {
+        missions++;
+        return api.post({
+            "action": "parse",
+            "format": "json",
+            "text": "<span id='zh-hant'>-{zh-hant;zh-tw;|" + title + "}-</span><span id='zh-hans'>-{zh-hans;zh-cn;|" + title + "}-</span>",
+            "prop": "text",
+            "preview": 1,
+            "uselang": "zh"
+        }).done(function (data) {
+            let parseResult = jQuery(data["parse"]["text"]["*"]);
+            let zhHant = parseResult.find("#zh-hant").text(), zhHans = parseResult.find("#zh-hans").text();
+            let clearCategories = function (data) {
+                if (!data || (data["continue"] && data["continue"]["cmcontinue"])) {
+                    missions++;
+                    return api.get({
+                        "action": "query",
+                        "format": "json",
+                        "titles": "Category:" + title,
+                        "redirects": 1,
+                        "list": "categorymembers",
+                        "cmcontinue": data && data["continue"]["cmcontinue"],
+                        "cmpageid": pageid,
+                        "cmlimit": "max"
+                    }).done(function (data) {
+                        editPageContent(data, zhHans, zhHant);
+                        clearCategories(data);
+                        missions--;
+                    });
+                }
+            }
+            clearCategories();
+            missions--;
+        });
+    }
+    let checkCategories = function (data) {
+        missions++;
+        let pageids = data["query"]["categorymembers"].map(x => x["pageid"]);
+        return api.get({
+            "action": "query",
+            "format": "json",
+            "prop": "categoryinfo",
+            "pageids": pageids.join("|")
+        }).done(function (data) {
+            Object.values(data["query"]["pages"]).filter(x => x["categoryinfo"]["size"] > 0).map(x => [x["title"].replace(/^Category:/, ""), x["pageid"]]).forEach(clearCategories);
+            missions--;
+        });
+    }
+    let getCategories = function (data) {
+        if (!data || (data["continue"] && data["continue"]["cmcontinue"])) {
+            missions++;
+            if (!interval) {
+                interval = setInterval(function () {
+                    if (missions == 0) {
+                        printLog(`分类重定向已检查完毕。下次检查将于 ${new Date(+new Date() + xzFixRedirectCategoryInterval).toLocaleString()} 进行。`, null, "xz-fix-redirect-category-main");
+                        clearInterval(interval);
+                    } else {
+                        printLog(`正在检查分类重定向……剩余 ${missions} 项查询。`, null, "xz-fix-redirect-category-main");
+                    }
+                }, 100);
+            }
+            return api.get({
+                "action": "query",
+                "format": "json",
+                "list": "categorymembers",
+                "cmcontinue": data && data["continue"]["cmcontinue"],
+                "cmtitle": "Category:已重定向的分类",
+                "cmlimit": "50"
+            }).done(function (data) {
+                checkCategories(data);
+                getCategories(data);
+                missions--;
+            });
+        } else {
+            localStorage.setItem("xzFixRedirectCategoryTime", +new Date());
+        }
+    }
+    jQuery("#localNotice").hide();
+    printLog("正在检查分类重定向……", null, "xz-fix-redirect-category-main");
+    getCategories();
+}, 100);
+// </pre>
