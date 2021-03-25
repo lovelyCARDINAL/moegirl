@@ -96,6 +96,7 @@ setTimeout(function temp() {
                     "minor": 1,
                     "bot": 1,
                     "tags": "Bot",
+                    "watchlist": "nochange",
                     "summary": "分类文本替换 - [[Category:" + from + "]]→[[Category:" + to + "]]",
                     "token": data["query"]["tokens"]["csrftoken"]
                 }).done(function (data) {
