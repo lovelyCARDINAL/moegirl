@@ -72,6 +72,7 @@ $(function() {
                         text: data.sectionText.replace("==" + data.sectionTitleRaw + "==", "").trim(),
                         section: "new",
                         tags: "快速存档讨论串|Bot",
+                        bot: 1,
                         sectiontitle: data.sectionTitleRaw,
                         summary: "存档讨论串：" + container.data().sectionTitle,
                     }).then(function(result) {
@@ -93,6 +94,7 @@ $(function() {
                         text: "==" + data.sectionTitleRaw + "==\n" + "{{Saved|link=" + mw.config.get("wgPageName") + "/存档/" + date.getFullYear() + "年" + date.month + "月" + "|title=" + container.data().sectionTitleSafe.replace(/\|/g, "{{!}}") + "}}",
                         section: container.data().section,
                         tags: "快速存档讨论串|Bot",
+                        bot: 1,
                     }).then(function(result) {
                         if (result.error) { throw new Error("Editing Error: " + result.error["*"]); }
                         container.trigger("success");
@@ -137,6 +139,7 @@ $(function() {
                     title: mw.config.get("wgPageName") + "/存档/" + date.getFullYear() + "年" + date.month + "月",
                     prependtext: "{{" + mw.config.get("wgTitle").replace(/\/.*$/, "") + "页顶/档案馆}}\n",
                     tags: "快速存档讨论串|Bot",
+                    bot: 1,
                     summary: "添加档案馆模板",
                 }).then(function(result) {
                     if (result.error) { throw new Error("Editing Error: " + result.error["*"]); }
