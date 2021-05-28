@@ -49,7 +49,7 @@ $(function() {
             }
             if (d.query.pages[mw.config.get('wgArticleId')].contributors.length != 1 && confirm('贡献者并非只有创建者一人，请检查页面历史。确定打回创建者用户页？') === false) return;
 
-            var default_reason = '无实质内容或不在收录范围内，移动回创建者用户子页面';
+            var default_reason = '质量低下，移动回创建者用户子页面';
             reason = prompt('打回用户页的理由将会作为移动原因和挂删理由\n空白则使用默认（' + default_reason + '）\n取消则不打入冷宫：');
             if (reason === null) return;
             if (reason === '') reason = default_reason;
